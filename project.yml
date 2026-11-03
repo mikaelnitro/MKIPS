@@ -1,0 +1,64 @@
+name: MKFlip
+options:
+  bundleIdPrefix: com.mkflip
+  deploymentTarget:
+    iOS: "18.0"
+  developmentLanguage: pt-BR
+  createIntermediateGroups: true
+
+settings:
+  base:
+    # Modo de linguagem Swift 5 com o compilador do Xcode 16 (Swift 6).
+    # Pragmático: evita quebras de concorrência estrita na primeira compilação.
+    # Migração para o modo Swift 6 é um passo futuro documentado no README.
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    IPHONEOS_DEPLOYMENT_TARGET: "18.0"
+    TARGETED_DEVICE_FAMILY: "1"          # 1 = iPhone apenas
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+
+targets:
+  MKFlip:
+    type: application
+    platform: iOS
+    sources:
+      - path: MKFlip
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mkflip.app
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        INFOPLIST_KEY_UIUserInterfaceStyle: Dark
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGN_ENTITLEMENTS: MKFlip/Resources/MKFlip.entitlements
+      # Descrições de permissão exigidas pelo iOS. Sem elas o app trava ao pedir acesso.
+      INFOPLIST_KEY_NFCReaderUsageDescription: "O MK FLIP lê tags NFC compatíveis que você aproxima do dispositivo, para análise técnica e educacional."
+      INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription: "O MK FLIP busca dispositivos Bluetooth LE próximos para fins de diagnóstico e inventário autorizado."
+      INFOPLIST_KEY_NSCameraUsageDescription: "O MK FLIP usa a câmera para ler QR Codes e analisar seu conteúdo antes de abrir links."
+      INFOPLIST_KEY_NSLocalNetworkUsageDescription: "O MK FLIP consulta serviços na rede local apenas para diagnósticos que você autorizar."
+
+  MKFlipTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: MKFlipTests
+    dependencies:
+      - target: MKFlip
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mkflip.app.tests
+        GENERATE_INFOPLIST_FILE: YES
+
+schemes:
+  MKFlip:
+    build:
+      targets:
+        MKFlip: all
+        MKFlipTests: [test]
+    test:
+      targets:
+        - MKFlipTests
+      gatherCoverageData: true
