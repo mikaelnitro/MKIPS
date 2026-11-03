@@ -15,12 +15,6 @@ struct DoHClient {
 
     enum RecordType: String, CaseIterable, Sendable {
         case A, AAAA, MX, TXT, NS, CNAME
-        var code: Int {
-            switch self {
-            case .A: 1; case .AAAA: 28; case .MX: 15
-            case .TXT: 16; case .NS: 2; case .CNAME: 5
-            }
-        }
     }
 
     func query(_ domain: String, types: [RecordType] = RecordType.allCases) async -> [Record] {

@@ -77,7 +77,7 @@ private struct AnalyzeTab: View {
             }
         }
         .fileImporter(isPresented: $importing, allowedContentTypes: [.data]) { result in
-            if let url = try? result.get().first {
+            if let url = try? result.get() {
                 let scoped = url.startAccessingSecurityScopedResource()
                 defer { if scoped { url.stopAccessingSecurityScopedResource() } }
                 if let data = try? Data(contentsOf: url) {
@@ -146,8 +146,8 @@ private struct CompareTab: View {
         }
     }
 
-    private func load(_ res: Result<[URL], Error>, assign: (Data, String) -> Void) {
-        if let url = try? res.get().first {
+    private func load(_ res: Result<URL, Error>, assign: (Data, String) -> Void) {
+        if let url = try? res.get() {
             let scoped = url.startAccessingSecurityScopedResource()
             defer { if scoped { url.stopAccessingSecurityScopedResource() } }
             if let data = try? Data(contentsOf: url) { assign(data, url.lastPathComponent) }
