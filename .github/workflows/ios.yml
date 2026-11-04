@@ -52,7 +52,23 @@ jobs:
             -resultBundlePath TestResults.xcresult \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
-          | tee xcodebuild.log
+          2>&1 | tee xcodebuild.log
+
+      - name: ">>> RESUMO DE ERROS (visivel sem login) <<<"
+        if: failure()
+        run: |
+          echo "## 🔴 Erros de compilação / teste" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          # Linhas de erro reais, caminho encurtado para legibilidade.
+          grep -E "error:|fatal error:|Undefined symbol|cannot find|Command .* failed" xcodebuild.log \
+            | sed 's#/Users/runner/[^ ]*/MKFlip/##g' \
+            | sort -u | head -60 | tee -a "$GITHUB_STEP_SUMMARY" \
+            | while IFS= read -r line; do
+                short="${line:0:300}"
+                echo "::error::${short}"
+              done
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          echo "Total de 'error:' = $(grep -c 'error:' xcodebuild.log || echo 0)" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Publicar resultado dos testes
         if: always()
