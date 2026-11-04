@@ -15,12 +15,15 @@ final class AppEnvironment {
 
     private let startDate = Date()
 
-    init(activityLog: ActivityLog = ActivityLog(),
-         router: AppRouter = AppRouter(),
-         reportStore: ReportStore = ReportStore()) {
-        self.activityLog = activityLog
-        self.router = router
-        self.reportStore = reportStore
+    // Os valores-padrão são criados DENTRO do init (contexto @MainActor), e não
+    // como expressões de argumento-padrão — estas são avaliadas fora do main
+    // actor e não podem chamar inicializadores @MainActor.
+    init(activityLog: ActivityLog? = nil,
+         router: AppRouter? = nil,
+         reportStore: ReportStore? = nil) {
+        self.activityLog = activityLog ?? ActivityLog()
+        self.router = router ?? AppRouter()
+        self.reportStore = reportStore ?? ReportStore()
     }
 
     /// Snapshot de status para o cabeçalho do dashboard.
