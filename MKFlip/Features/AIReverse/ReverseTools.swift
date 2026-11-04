@@ -14,16 +14,14 @@ struct FileComparison: Sendable {
 
 enum FileComparator {
     static func compare(_ a: Data, _ b: Data) -> FileComparison {
-        let minLen = min(a.count, b.count)
+        let bytesA = [UInt8](a)
+        let bytesB = [UInt8](b)
+        let minLen = min(bytesA.count, bytesB.count)
         var firstDiff: Int? = nil
         var i = 0
-        a.withUnsafeBytes { pa in
-            b.withUnsafeBytes { pb in
-                while i < minLen {
-                    if pa[i] != pb[i] { firstDiff = i; break }
-                    i += 1
-                }
-            }
+        while i < minLen {
+            if bytesA[i] != bytesB[i] { firstDiff = i; break }
+            i += 1
         }
         let identical = a.count == b.count && firstDiff == nil
         return FileComparison(
