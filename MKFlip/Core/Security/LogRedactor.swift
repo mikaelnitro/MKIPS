@@ -39,6 +39,10 @@ enum LogRedactor {
     static func redactText(_ text: String) -> String {
         var result = text
 
+        // Bearer <token> PRIMEIRO — senão o padrão "Authorization:" abaixo
+        // consome a palavra "Bearer" e deixa o token exposto.
+        result = replace(result, pattern: "(?i)(bearer\\s+)(\\S+)", with: "$1\(mask)")
+
         // chave=valor / chave: valor onde a chave é sensível
         for keyword in sensitiveKeywords {
             let patterns = [
@@ -49,9 +53,6 @@ enum LogRedactor {
                 result = replace(result, pattern: pattern, with: "$1\(mask)")
             }
         }
-
-        // Bearer <token>
-        result = replace(result, pattern: "(?i)(bearer\\s+)(\\S+)", with: "$1\(mask)")
 
         return result
     }
