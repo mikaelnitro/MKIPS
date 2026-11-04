@@ -69,7 +69,9 @@ struct TerminalView: View {
         }
         if let target = result.navigateTo {
             // Pequeno atraso para a linha de saída aparecer antes de navegar.
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            // Task @MainActor evita chamar método @MainActor de closure não isolado.
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 150_000_000)
                 env.router.open(target)
             }
         }

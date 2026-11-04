@@ -156,27 +156,11 @@ final class WebSecurityScanner: NSObject, URLSessionDelegate, @unchecked Sendabl
     private struct CertInfo { let subject: String?; let issuer: String?; let notBefore: Date?; let notAfter: Date? }
 
     private static func parse(_ cert: SecCertificate) -> CertInfo {
+        // No iOS, a API pública expõe de forma confiável apenas o resumo do
+        // titular. `SecCertificateCopyValues` e as constantes kSecOID* são
+        // exclusivas do macOS. Emissor e datas de validade exigiriam parsing
+        // manual de ASN.1/DER — não implementado nesta fase (não inventamos).
         let subject = SecCertificateCopySubjectSummary(cert) as String?
-
-        var issuer: String?
-        var notBefore: Date?
-        var notAfter: Date?
-
-        let keys = [kSecOIDX509V1IssuerName, kSecOIDX509V1ValidityNotBefore, kSecOIDX509V1ValidityNotAfter] as CFArray
-        if let values = SecCertificateCopyValues(cert, keys, nil) as? [CFString: Any] {
-            if let na = values[kSecOIDX509V1ValidityNotAfter] as? [CFString: Any],
-               let v = na[kSecPropertyKeyValue] as? Double {
-                notAfter = Date(timeIntervalSinceReferenceDate: v)
-            }
-            if let nb = values[kSecOIDX509V1ValidityNotBefore] as? [CFString: Any],
-               let v = nb[kSecPropertyKeyValue] as? Double {
-                notBefore = Date(timeIntervalSinceReferenceDate: v)
-            }
-            if let iss = values[kSecOIDX509V1IssuerName] as? [CFString: Any],
-               let parts = iss[kSecPropertyKeyValue] as? [[CFString: Any]] {
-                issuer = parts.compactMap { $0[kSecPropertyKeyValue] as? String }.last
-            }
-        }
-        return CertInfo(subject: subject, issuer: issuer, notBefore: notBefore, notAfter: notAfter)
+        return CertInfo(subject: subject, issuer: nil, notBefore: nil, notAfter: nil)
     }
 }
