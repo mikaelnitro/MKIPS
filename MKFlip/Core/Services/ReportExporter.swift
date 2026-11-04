@@ -5,14 +5,22 @@ import UIKit
 /// compartilhar via `ShareLink`/UIActivityViewController.
 enum ReportExporter {
 
-    enum Format { case txt, pdf }
+    enum Format { case txt, pdf, json }
 
     /// Escreve o relatório num arquivo temporário e devolve a URL.
     static func export(_ report: Report, as format: Format) throws -> URL {
         switch format {
         case .txt: try exportTXT(report)
         case .pdf: try exportPDF(report)
+        case .json: try exportJSON(report)
         }
+    }
+
+    private static func exportJSON(_ report: Report) throws -> URL {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(fileName(report, ext: "json"))
+        let data = try JSONEncoder.mk.encode(report)
+        try data.write(to: url, options: .atomic)
+        return url
     }
 
     private static func fileName(_ report: Report, ext: String) -> String {

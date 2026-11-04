@@ -33,7 +33,9 @@ final class ReportStore {
 
     private func save() {
         guard let data = try? JSONEncoder.mk.encode(reports) else { return }
-        try? data.write(to: fileURL, options: .atomic)
+        // Proteção de arquivo: criptografado em repouso quando o aparelho está
+        // bloqueado. Relatórios podem conter dados sensíveis de análise.
+        try? data.write(to: fileURL, options: [.atomic, .completeFileProtection])
     }
 }
 

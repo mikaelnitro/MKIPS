@@ -39,12 +39,13 @@ struct ReportResultView: View {
                 Text(exportError).font(MKFont.caption()).foregroundStyle(MKTheme.Color.danger)
             }
 
-            HStack(spacing: 10) {
+            HStack(spacing: 8) {
                 MKButton(title: "TXT", systemImage: "doc.plaintext", kind: .secondary) { export(.txt) }
                 MKButton(title: "PDF", systemImage: "doc.richtext", kind: .secondary) { export(.pdf) }
-                if let onSave {
-                    MKButton(title: "Salvar", systemImage: "tray.and.arrow.down") { onSave() }
-                }
+                MKButton(title: "JSON", systemImage: "curlybraces", kind: .secondary) { export(.json) }
+            }
+            if let onSave {
+                MKButton(title: "Salvar na central", systemImage: "tray.and.arrow.down") { onSave() }
             }
         }
         .sheet(item: $shareURL) { item in

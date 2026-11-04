@@ -8,7 +8,8 @@ struct LocalIntelligence: AIProvider {
 
     private let doh = DoHClient()
 
-    func respond(to prompt: String) async -> AIResponse {
+    func respond(to prompt: String, history: [AITurn], context: String?) async -> AIResponse {
+        // Baseado em regras — histórico e contexto não são usados aqui.
         let text = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
         let lower = text.lowercased()
         guard !lower.isEmpty else {

@@ -18,7 +18,14 @@ struct MKAIView: View {
     @State private var input = ""
     @State private var thinking = false
 
-    private let provider: AIProvider = LocalIntelligence()
+    /// Provedor escolhido em tempo de envio: remoto (IA real) se houver chave
+    /// configurada, senão a inteligência local baseada em regras.
+    private var currentProvider: AIProvider {
+        AIConfiguration.isConfigured ? RemoteAIProvider() : LocalIntelligence()
+    }
+    private var currentStatus: AIStatus {
+        AIConfiguration.isConfigured ? .connected : .localOnly
+    }
 
     private let suggestions = [
         "Gere o hash de senha123",
@@ -52,8 +59,8 @@ struct MKAIView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                StatusPill(text: provider.displayStatus.label,
-                           tint: provider.displayStatus == .connected ? MKTheme.Color.neon : MKTheme.Color.warning)
+                StatusPill(text: currentStatus.label,
+                           tint: currentStatus == .connected ? MKTheme.Color.neon : MKTheme.Color.warning)
             }
         }
     }
@@ -63,7 +70,9 @@ struct MKAIView: View {
             VStack(alignment: .leading, spacing: 10) {
                 Text("MK AI — Inteligência central")
                     .font(MKFont.title(16)).foregroundStyle(MKTheme.Color.textPrimary)
-                Text("Opero **offline** com inteligência local: gero hashes, analiso URLs, audito senhas, consulto DNS e explico termos. Integração remota requer configurar uma API.")
+                Text(AIConfiguration.isConfigured
+                     ? "IA **conectada** (\(AIConfiguration.model)). Pergunte à vontade — análise, explicações e relatórios."
+                     : "Opero **offline** com inteligência local (hashes, URLs, senhas, DNS, termos). Para IA completa, vá em Configurações → IA, escolha um provedor **gratuito** e cole sua chave.")
                     .font(MKFont.body(13)).foregroundStyle(MKTheme.Color.textSecondary)
                 ForEach(suggestions, id: \.self) { s in
                     Button { input = s; send() } label: {
@@ -88,7 +97,7 @@ struct MKAIView: View {
                     .foregroundStyle(m.role == .user ? MKTheme.Color.background : MKTheme.Color.textPrimary)
                     .textSelection(.enabled)
                 if m.grounded {
-                    Label("resultado local", systemImage: "checkmark.seal")
+                    Label("resultado real", systemImage: "checkmark.seal")
                         .font(MKFont.caption()).foregroundStyle(MKTheme.Color.neonDim)
                 }
                 if let module = m.suggestedModule {
@@ -140,19 +149,31 @@ struct MKAIView: View {
     private func send() {
         let prompt = input.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !prompt.isEmpty else { return }
+
+        // Histórico anterior (antes de anexar o novo turno) para dar contexto à IA.
+        let history: [AITurn] = messages.map {
+            AITurn(role: $0.role == .user ? .user : .assistant, text: $0.text)
+        }
+        // Contexto leve: atividade recente do app.
+        let context = env.activityLog.recent(6)
+            .map { "\($0.source): \($0.message)" }
+            .joined(separator: "\n")
+
         messages.append(AIMessage(role: .user, text: prompt))
         input = ""
         thinking = true
         env.activityLog.log("MK-AI", "Consulta: \(prompt)", severity: .info)
 
+        let provider = currentProvider
         Task {
-            let response = await provider.respond(to: prompt)
+            let response = await provider.respond(to: prompt, history: history, context: context)
             await MainActor.run {
                 messages.append(AIMessage(role: .assistant, text: response.text,
                                           suggestedModule: response.suggestedModule,
                                           grounded: response.isGrounded))
                 thinking = false
-                env.activityLog.log("MK-AI", response.isGrounded ? "Resposta com resultado local" : "Resposta/roteamento",
+                env.activityLog.log("MK-AI",
+                                    response.isGrounded ? "Resposta recebida" : "Resposta/roteamento/limite",
                                     severity: .success)
             }
         }
